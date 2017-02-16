@@ -6,6 +6,7 @@ import tweenState from 'kw-react-tween-state';
 import decorators from './decorators';
 import assign from 'object-assign';
 import ExecutionEnvironment from 'exenv';
+const imagesLoaded = ExecutionEnvironment.canUseDOM ? require('imagesloaded') : null;
 
 const addEvent = function(elem, type, eventHandle) {
   if (elem === null || typeof (elem) === 'undefined') {
@@ -85,6 +86,7 @@ const Carousel = React.createClass({
     vertical: React.PropTypes.bool,
     width: React.PropTypes.string,
     wrapAround: React.PropTypes.bool,
+    monitorImagesLoaded: React.PropTypes.bool,
   },
 
   getDefaultProps() {
@@ -596,6 +598,20 @@ const Carousel = React.createClass({
     if (ExecutionEnvironment.canUseDOM) {
       addEvent(window, 'resize', self.onResize);
       addEvent(document, 'readystatechange', self.onReadyStateChange);
+
+      if (this.props.monitorImagesLoaded) {
+        const node = ReactDom.findDOMNode(self);
+
+        if (node) {
+          const imgLoad = imagesLoaded(node.querySelectorAll('*'), { background: true });
+
+          imgLoad.once('always', () => {
+            self.setDimensions();
+          });
+
+          self.imageLoad = imgLoad;
+        }
+      }
     }
   },
 
@@ -612,6 +628,10 @@ const Carousel = React.createClass({
     if (ExecutionEnvironment.canUseDOM) {
       removeEvent(window, 'resize', self.onResize);
       removeEvent(document, 'readystatechange', self.onReadyStateChange);
+
+      if (this.props.monitorImagesLoaded) {
+        self.imageLoad.off('always');
+      }
     }
   },
 
@@ -719,9 +739,9 @@ const Carousel = React.createClass({
   getListStyles() {
     var listWidth = this.state.slideWidth * React.Children.count(this.props.children);
     var spacingOffset = this.props.cellSpacing * React.Children.count(this.props.children);
-    var transform = 'translate3d(' +
+    var transform = 'translate(' +
       this.getTweeningValue('left') + 'px, ' +
-      this.getTweeningValue('top') + 'px, 0)'
+      this.getTweeningValue('top') + 'px)'
     return {
       transform,
       WebkitTransform: transform,
