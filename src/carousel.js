@@ -112,6 +112,7 @@ const Carousel = createReactClass({
       vertical: false,
       width: '100%',
       wrapAround: false,
+      monitorImagesLoaded: false,
     };
   },
 
@@ -702,8 +703,8 @@ const Carousel = createReactClass({
       addEvent(window, 'resize', self.onResize);
       addEvent(document, 'readystatechange', self.onReadyStateChange);
 
-      if (this.props.monitorImagesLoaded) {
-        const node = ReactDom.findDOMNode(self);
+      if (this.props.monitorImagesLoaded && self.refs.frame) {
+        const node = ReactDom.findDOMNode(self.refs.frame);
 
         if (node) {
           const imgLoad = imagesLoaded(node.querySelectorAll('*'), { background: true });
